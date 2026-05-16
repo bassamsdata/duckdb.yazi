@@ -678,28 +678,26 @@ local function create_cache(job, mode, file_type, limit)
 		ya.dbg("stderr: " .. tostring(output.stderr))
 	end
 
-	if not output or (output.stderr and output.stderr ~= "") then
-		ya.err(
-			output
-					and string.format(
-						"[duckdb] error creating %s cache for %s: %s",
-						mode,
-						tostring(job.file.url),
-						output.stderr
-					)
-				or string.format(
-					"[duckdb] no output returned while creating %s cache for %s",
-					mode,
-					tostring(job.file.url)
-				)
-		)
+	-- run_query returns nil only on non-zero exit; any remaining stderr is a warning.
+	-- Trust the filesystem: if the parquet file was created, the COPY succeeded.
+	local file_created = fs.cha(cache_url)
+
+	if not output then
+		ya.err(string.format("[duckdb] no output returned while creating %s cache for %s", mode, tostring(job.file.url)))
 		remove_file(cache_url)
-		local result = finish_preload(false, cache_str)
-		return result
+		return finish_preload(false, cache_str)
 	end
 
-	local result = finish_preload(true, cache_str)
-	return result
+	if output.stderr and output.stderr ~= "" then
+		if file_created then
+			ya.dbg(string.format("[duckdb] %s cache created with warnings for %s: %s", mode, tostring(job.file.url), output.stderr))
+		else
+			ya.err(string.format("[duckdb] error creating %s cache for %s: %s", mode, tostring(job.file.url), output.stderr))
+			return finish_preload(false, cache_str)
+		end
+	end
+
+	return finish_preload(file_created, cache_str)
 end
 
 local function is_plain_text(job, file_type)
