@@ -276,7 +276,7 @@ local function run_query(job, query, target, file_type)
 	local width = math.max((job.area and job.area.w * 3 or 80), 80)
 	local height = math.max((job.area and job.area.h or 25), 25)
 
-	local args = {}
+	local args = { "-no-init" }
 
 	if file_type == "duckdb" then
 		table.insert(args, "-readonly")
@@ -683,16 +683,32 @@ local function create_cache(job, mode, file_type, limit)
 	local file_created = fs.cha(cache_url)
 
 	if not output then
-		ya.err(string.format("[duckdb] no output returned while creating %s cache for %s", mode, tostring(job.file.url)))
+		ya.err(
+			string.format("[duckdb] no output returned while creating %s cache for %s", mode, tostring(job.file.url))
+		)
 		remove_file(cache_url)
 		return finish_preload(false, cache_str)
 	end
 
 	if output.stderr and output.stderr ~= "" then
 		if file_created then
-			ya.dbg(string.format("[duckdb] %s cache created with warnings for %s: %s", mode, tostring(job.file.url), output.stderr))
+			ya.dbg(
+				string.format(
+					"[duckdb] %s cache created with warnings for %s: %s",
+					mode,
+					tostring(job.file.url),
+					output.stderr
+				)
+			)
 		else
-			ya.err(string.format("[duckdb] error creating %s cache for %s: %s", mode, tostring(job.file.url), output.stderr))
+			ya.err(
+				string.format(
+					"[duckdb] error creating %s cache for %s: %s",
+					mode,
+					tostring(job.file.url),
+					output.stderr
+				)
+			)
 			return finish_preload(false, cache_str)
 		end
 	end
