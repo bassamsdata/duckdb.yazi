@@ -290,6 +290,7 @@ local function run_query(job, query, target, file_type)
 		".mode duckbox",
 		".timer off",
 		"SET enable_progress_bar = false;",
+		"SET lambda_syntax = 'ENABLE_SINGLE_ARROW';",
 		string.format(".maxwidth %d", width),
 		string.format(".maxrows %d", height),
 		".highlight_results on",
@@ -672,8 +673,10 @@ local function create_cache(job, mode, file_type, limit)
 	local base_query = generate_preload_query(job, mode, file_type, limit)
 	local query = string.format("COPY (%s) TO '%s' (FORMAT 'parquet');", base_query, target)
 	local output = run_query(job, query, nil, file_type)
-	ya.dbg("stdout: " .. tostring(output.stdout))
-	ya.dbg("stderr: " .. tostring(output.stderr))
+	if output then
+		ya.dbg("stdout: " .. tostring(output.stdout))
+		ya.dbg("stderr: " .. tostring(output.stderr))
+	end
 
 	if not output or (output.stderr and output.stderr ~= "") then
 		ya.err(
@@ -758,8 +761,10 @@ function M:peek(job)
 	local query = generate_peek_query(args.target, job, args.limit, args.offset, args.file_type, args.cache_str)
 	ya.dbg("query: " .. tostring(query))
 	local output = run_query(job, query, args.target, args.file_type)
-	ya.dbg("stdout: " .. tostring(output.stdout))
-	ya.dbg("stderr: " .. tostring(output.stderr))
+	if output then
+		ya.dbg("stdout: " .. tostring(output.stdout))
+		ya.dbg("stderr: " .. tostring(output.stderr))
+	end
 	if not output_is_valid(output, args.mode, job) then
 		if args.target == args.cache_url and args.scrolled_collumns == 0 then
 			add_to_list("bad_cache", args.cache_str)
