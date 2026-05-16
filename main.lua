@@ -294,6 +294,13 @@ local function run_query(job, query, target, file_type)
 		string.format(".maxwidth %d", width),
 		string.format(".maxrows %d", height),
 		".highlight_results on",
+		".highlight_colors layout gray",
+		".highlight_colors column_name magenta bold",
+		".highlight_colors column_type gray",
+		".highlight_colors string_value cyan",
+		".highlight_colors numeric_value green",
+		".highlight_colors temporal_value blue",
+		".highlight_colors footer gray",
 	})
 
 	-- Add query or list of queries
